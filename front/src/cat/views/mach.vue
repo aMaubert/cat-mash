@@ -1,9 +1,20 @@
 <script setup lang="ts">
+import {computed} from "vue";
+import type {Cat} from "../definitions";
+
+const props = defineProps({
+  firstCat: Object,
+  secondCat: Object,
+});
+
+const firstCat =  computed<Cat>(() => props.firstCat as Cat);
+const secondCat =  computed<Cat>(() => props.secondCat as Cat);
+
 </script>
 <template>
   <div class="page">
     <div class="left">
-      <img src="../../assets/logo-removebg.png"
+      <img :src="firstCat.imageUrl"
            class="logo"
            alt="logo">
     </div>
@@ -29,7 +40,7 @@
       </div>
     </div>
     <div class="right">
-      <img src="../../assets/logo-removebg.png"
+      <img :src="secondCat.imageUrl"
            class="logo"
            alt="logo">
     </div>
