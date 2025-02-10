@@ -4,7 +4,8 @@ import type {Cat, SelectedCat} from "../definitions";
 import {CatService} from "../cat.service.ts";
 import {Notyf} from "notyf";
 
-const userScore = ref<number>(0);
+const emits = defineEmits(['increment']);
+
 const cats = ref<Cat[]>([]);
 const selectedCats = ref<SelectedCat | undefined>(undefined);
 const firstCat = computed<Cat | undefined>(() => selectedCats.value?.firstCat);
@@ -33,7 +34,7 @@ const incrementScore = async (cat: Cat) => {
   await incrementUpdate(cat._id);
   await fetchCats();
   nextMach();
-  userScore.value = CatService.incrementUserScore();
+  emits('increment');
 };
 
 const incrementUpdate = async (catId: string) => {
@@ -52,12 +53,10 @@ const incrementUpdate = async (catId: string) => {
   }
 };
 
-
 const fetchCats = async () => {
   try {
     const response = await CatService.fetchAll();
     cats.value = response.data;
-    nextMach();
   } catch (error) {
     new Notyf().open({
       message: "Erreur récupération des données",
@@ -74,7 +73,6 @@ const fetchCats = async () => {
 onMounted(async () => {
   await fetchCats();
   nextMach();
-  userScore.value = CatService.fetchUserScore();
 });
 
 
@@ -101,24 +99,6 @@ onMounted(async () => {
            class="logo"
            alt="logo">
     </div>
-    <router-link
-        class="score__container"
-        to="/scores">
-      <div>
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="24"
-             height="24"
-             viewBox="0 0 24 24">
-          <path fill="#fa6950" d="m11 8.8l-2.9 2.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7l4.6-4.6q.3-.3.7-.3t.7.3l4.6 4.6q.275.275.275.7t-.275.7t-.7.275t-.7-.275L13 8.8V17q0 .425-.288.713T12 18t-.712-.288T11 17z"/>
-        </svg>
-      </div>
-      <div>
-        Classement des chats
-      </div>
-      <div class="user__score">
-        {{ userScore }} match joué
-      </div>
-    </router-link>
     <div class="right"
          v-if="secondCat !== undefined">
       <button class="frame"
@@ -156,28 +136,6 @@ onMounted(async () => {
   left: 50%;
   width: 15vh;
   transform: translate(-50%);
-}
-.score__container {
-  background-color: #feffed;
-  color: #fa6950;
-
-  position: absolute;
-  bottom: 0;
-  left: 35%;
-
-  width: 30%;
-  height: 10%;
-
-  text-align: center;
-
-  border-top-left-radius: 1em;
-  border-top-right-radius: 1em;
-
-  text-decoration: none;
-
-}
-.user__score {
-  font-size: 0.8em;
 }
 
 .left .frame, .right .frame {
