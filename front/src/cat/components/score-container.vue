@@ -20,6 +20,9 @@ const nextPage = computed<string>(() => {
   return isMashPage.value ? '/scores' : '/';
 });
 
+const textNextPage = computed<string>(() => {
+  return isMashPage.value ? 'Classement des chats' :  'Revenir au vote';
+});
 
 </script>
 
@@ -37,10 +40,10 @@ const nextPage = computed<string>(() => {
       </svg>
     </div>
     <div>
-      Classement des chats
+      {{ textNextPage }}
     </div>
     <div class="user__score">
-      {{ userScore }} match joué
+      {{ userScore }} matchs joué
     </div>
   </router-link>
 </template>
