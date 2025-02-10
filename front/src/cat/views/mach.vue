@@ -1,26 +1,79 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from "vue";
-import type {Cat} from "../definitions";
+import type {Cat, SelectedCat} from "../definitions";
 import {CatService} from "../cat.service.ts";
-
-const props = defineProps({
-  firstCat: Object,
-  secondCat: Object,
-});
-
-const emits = defineEmits(['increment']);
+import {Notyf} from "notyf";
 
 const userScore = ref<number>(0);
-const firstCat =  computed<Cat>(() => props.firstCat as Cat);
-const secondCat =  computed<Cat>(() => props.secondCat as Cat);
+const cats = ref<Cat[]>([]);
+const selectedCats = ref<SelectedCat | undefined>(undefined);
+const firstCat = computed<Cat | undefined>(() => selectedCats.value?.firstCat);
+const secondCat = computed<Cat | undefined>(() => selectedCats.value?.secondCat);
 
-const incrementScore = (cat: Cat) => {
-  emits('increment', cat._id);
-  userScore.value = CatService.incrementUserScore();
-
+const randomCat = (): Cat => {
+  const randomIndex = Math.floor( Math.random() * (cats.value.length - 1) )  ;
+  return cats.value[randomIndex];
+};
+const nextMach = () => {
+  /*
+    here we should have an algo with some behaviour rules but here I choose to select the cat randomly
+   */
+  const firstCat = randomCat();
+  let secondCat = randomCat();
+  while (firstCat._id === secondCat._id) {
+    secondCat = randomCat();
+  }
+  selectedCats.value = {
+    firstCat,
+    secondCat,
+  };
 };
 
-onMounted(() => {
+const incrementScore = async (cat: Cat) => {
+  await incrementUpdate(cat._id);
+  await fetchCats();
+  nextMach();
+  userScore.value = CatService.incrementUserScore();
+};
+
+const incrementUpdate = async (catId: string) => {
+  try {
+    await CatService.incrementScore(catId);
+  } catch (error) {
+    new Notyf().open({
+      message: "Erreur incrementation de score",
+      type: 'error',
+      duration: 2000,
+      position: {
+        x: 'right',
+        y: 'top',
+      },
+    });
+  }
+};
+
+
+const fetchCats = async () => {
+  try {
+    const response = await CatService.fetchAll();
+    cats.value = response.data;
+    nextMach();
+  } catch (error) {
+    new Notyf().open({
+      message: "Erreur récupération des données",
+      type: 'error',
+      duration: 2000,
+      position: {
+        x: 'right',
+        y: 'top',
+      },
+    });
+  }
+};
+
+onMounted(async () => {
+  await fetchCats();
+  nextMach();
   userScore.value = CatService.fetchUserScore();
 });
 
@@ -28,8 +81,11 @@ onMounted(() => {
 
 </script>
 <template>
+  <!-- todo: create a component for the left and right image in the near futur -->
+
   <div class="page">
-    <div class="left">
+    <div class="left"
+         v-if="firstCat !== undefined">
       <button class="frame"
               @click="incrementScore(firstCat)">
         <b class="like">
@@ -45,7 +101,9 @@ onMounted(() => {
            class="logo"
            alt="logo">
     </div>
-    <div class="score__container">
+    <router-link
+        class="score__container"
+        to="/scores">
       <div>
         <svg xmlns="http://www.w3.org/2000/svg"
              width="24"
@@ -60,8 +118,9 @@ onMounted(() => {
       <div class="user__score">
         {{ userScore }} match joué
       </div>
-    </div>
-    <div class="right">
+    </router-link>
+    <div class="right"
+         v-if="secondCat !== undefined">
       <button class="frame"
               @click="incrementScore(secondCat)">
         <b class="like">
@@ -114,6 +173,8 @@ onMounted(() => {
   border-top-left-radius: 1em;
   border-top-right-radius: 1em;
 
+  text-decoration: none;
+
 }
 .user__score {
   font-size: 0.8em;
@@ -144,9 +205,7 @@ onMounted(() => {
 
 .frame .like {
   color: #fa6950;
-
   opacity: 0;
-
   font-size: 3em;
 }
 
