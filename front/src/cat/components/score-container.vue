@@ -43,7 +43,7 @@ const textNextPage = computed<string>(() => {
       {{ textNextPage }}
     </div>
     <div class="user__score">
-      {{ userScore }} matchs joué
+      {{ userScore }} matchs joués
     </div>
   </router-link>
 </template>
