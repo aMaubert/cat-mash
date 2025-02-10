@@ -1,7 +1,8 @@
 <template>
   <mach v-if="cats.length > 0 && currentSelectedCats !== undefined"
         :firstCat="currentSelectedCats.firstCat"
-        :secondCat="currentSelectedCats.secondCat">
+        :secondCat="currentSelectedCats.secondCat"
+        @increment="incrementScore">
   </mach>
 </template>
 
@@ -35,13 +36,34 @@ const nextMach = () => {
   };
 };
 
-onMounted(async () => {
+const incrementScore = async (catId: string) => {
+  await incrementUpdate(catId);
+  await fetchCats();
+  nextMach();
+}
+
+const incrementUpdate = async (catId: string) => {
+  try {
+    await CatService.incrementScore(catId);
+  } catch (error) {
+    new Notyf().open({
+      message: "Erreur incrementation de score",
+      type: 'error',
+      duration: 2000,
+      position: {
+        x: 'right',
+        y: 'top',
+      },
+    });
+  }
+};
+
+const fetchCats = async () => {
   try {
     const response = await CatService.fetchAll();
     cats.value = response.data;
     nextMach();
   } catch (error) {
-    console.error(error);
     new Notyf().open({
       message: "Erreur récupération des données",
       type: 'error',
@@ -52,6 +74,11 @@ onMounted(async () => {
       },
     });
   }
+};
+
+onMounted(async () => {
+  await fetchCats();
+  nextMach();
 });
 
 

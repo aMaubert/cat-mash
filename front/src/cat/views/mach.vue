@@ -1,20 +1,37 @@
 <script setup lang="ts">
-import {computed} from "vue";
+import {computed, onMounted, ref} from "vue";
 import type {Cat} from "../definitions";
+import {CatService} from "../cat.service.ts";
 
 const props = defineProps({
   firstCat: Object,
   secondCat: Object,
 });
 
+const emits = defineEmits(['increment']);
+
+const userScore = ref<number>(0);
 const firstCat =  computed<Cat>(() => props.firstCat as Cat);
 const secondCat =  computed<Cat>(() => props.secondCat as Cat);
+
+const incrementScore = (cat: Cat) => {
+  emits('increment', cat._id);
+  userScore.value = CatService.incrementUserScore();
+
+};
+
+onMounted(() => {
+  userScore.value = CatService.fetchUserScore();
+});
+
+
 
 </script>
 <template>
   <div class="page">
     <div class="left">
-      <button class="frame">
+      <button class="frame"
+              @click="incrementScore(firstCat)">
         <b class="like">
           J'aime
         </b>
@@ -41,11 +58,12 @@ const secondCat =  computed<Cat>(() => props.secondCat as Cat);
         Classement des chats
       </div>
       <div class="user__score">
-        0 match joué
+        {{ userScore }} match joué
       </div>
     </div>
     <div class="right">
-      <button class="frame">
+      <button class="frame"
+              @click="incrementScore(secondCat)">
         <b class="like">
           J'aime
         </b>
@@ -70,6 +88,7 @@ const secondCat =  computed<Cat>(() => props.secondCat as Cat);
 }
 .right, .left {
   width: 49%;
+  height: 100%;
   color: #42b883;
   display: flex;
 }
@@ -103,9 +122,9 @@ const secondCat =  computed<Cat>(() => props.secondCat as Cat);
 .left .frame, .right .frame {
   background-color: #feffed;
 
-  width: 80%;
-  height: 70%;
-  margin: 20% 10%;
+  width: 40vw;
+  height: 60vh;
+  margin: 20vh 5vw;
   border-radius: 12%;
   border: 0;
   padding: 0;
